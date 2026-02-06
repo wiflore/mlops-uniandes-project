@@ -20,11 +20,11 @@
 
 | Nombre | GitHub | Rol |
 |--------|--------|-----|
-| William Florez | @wiflore | Líder |
-| Miembro 2 | @username | Por definir |
-| Miembro 3 | @username | Por definir |
-| Miembro 4 | @username | Por definir |
-| Miembro 5 | @username | Por definir |
+| William Florez | @wiflore | Contribuidor |
+| Miembro 2 | @username | Contribuidor|
+| Miembro 3 | @username | Contribuidor |
+| Miembro 4 | @username | Contribuidor |
+| Miembro 5 | @username | Contribuidor |
 
 ## 📁 Estructura del Proyecto
 
