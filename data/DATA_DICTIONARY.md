@@ -22,10 +22,6 @@
 
 ---
 
-## Valores Únicos por Especialidad
-
-*Por completar durante EDA*
-
 ## Notas
 
 - Los datos fueron extraídos de mtsamples.com
