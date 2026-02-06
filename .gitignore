@@ -1,0 +1,45 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Data (large files - use DVC for versioning)
+# Uncomment when using DVC:
+# data/raw/*.csv
+# data/processed/*.csv
+
+# Environment variables
+.env
+.env.local
+
+# Logs
+*.log
+logs/
+
+# Models (will be tracked by MLflow later)
+# models/
+
+# Reports (keep structure, ignore generated files)
+reports/**/*.html
+
+# Temporary files
+*.tmp
+*.temp
