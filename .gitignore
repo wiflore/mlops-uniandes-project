@@ -33,12 +33,8 @@ Thumbs.db
 # Logs
 *.log
 logs/
-
-# Models (will be tracked by MLflow later)
-# models/
-
-# Reports (keep structure, ignore generated files)
-reports/**/*.html
+# Local files (build scripts, context docs, etc.)
+ignore/
 
 # Temporary files
 *.tmp
