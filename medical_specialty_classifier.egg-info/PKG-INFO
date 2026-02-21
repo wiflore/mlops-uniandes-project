@@ -1,0 +1,109 @@
+Metadata-Version: 2.4
+Name: medical-specialty-classifier
+Version: 0.1.0
+Summary: Clasificador de especialidades médicas basado en transcripciones con NLP
+Home-page: https://github.com/wiflore/mlops-uniandes-project
+Author: Equipo MLOps UniAndes
+Classifier: Development Status :: 3 - Alpha
+Classifier: Intended Audience :: Science/Research
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Topic :: Scientific/Engineering :: Artificial Intelligence
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+Requires-Dist: pandas>=2.0.0
+Requires-Dist: numpy>=1.24.0
+Requires-Dist: scipy>=1.10.0
+Requires-Dist: scikit-learn>=1.3.0
+Requires-Dist: xgboost>=2.0.0
+Requires-Dist: nltk>=3.8.0
+Requires-Dist: joblib>=1.3.0
+Requires-Dist: fastapi>=0.110.0
+Requires-Dist: uvicorn>=0.27.0
+Requires-Dist: pydantic>=2.5.0
+Provides-Extra: dev
+Requires-Dist: pytest>=7.0.0; extra == "dev"
+Requires-Dist: pytest-cov>=4.0.0; extra == "dev"
+Requires-Dist: httpx>=0.24.0; extra == "dev"
+Requires-Dist: tox>=4.0.0; extra == "dev"
+Requires-Dist: flake8>=6.0.0; extra == "dev"
+Requires-Dist: build>=1.0.0; extra == "dev"
+Dynamic: author
+Dynamic: classifier
+Dynamic: description
+Dynamic: description-content-type
+Dynamic: home-page
+Dynamic: provides-extra
+Dynamic: requires-dist
+Dynamic: requires-python
+Dynamic: summary
+
+# Proyecto MLOps - Transcripciones Médicas
+
+## 📋 Descripción del Proyecto
+
+**Objetivo:** Desarrollar y desplegar un producto basado en datos para clasificación de transcripciones médicas usando técnicas de NLP.
+
+**Dataset:** [Medical Transcriptions](https://www.kaggle.com/datasets/tboyle10/medicaltranscriptions) - Datos de transcripciones médicas de mtsamples.com
+
+## 🎯 Problema de Negocio
+
+> *Por definir por el equipo*
+
+## 📊 Descripción del Dataset
+
+- **Fuente:** Kaggle - mtsamples.com
+- **Dominio:** Salud / NLP
+- **Contenido:** Transcripciones médicas con clasificaciones por especialidad
+
+## 👥 Miembros del Equipo
+
+| Nombre | GitHub | Rol |
+|--------|--------|-----|
+| William Florez | @wiflore | Contribuidor |
+| Miembro 2 | @username | Contribuidor|
+| Miembro 3 | @username | Contribuidor |
+| Miembro 4 | @username | Contribuidor |
+| Miembro 5 | @username | Contribuidor |
+
+## 📁 Estructura del Proyecto
+
+```
+mlops-uniandes-project/
+├── data/raw/              # Datasets originales
+├── notebooks/             # Jupyter notebooks (EDA)
+├── mockups/               # Prototipos de UI
+├── reports/entrega1/      # Reportes de entrega
+└── docs/                  # Documentación
+```
+
+## 🚀 Configuración
+
+```bash
+# Clonar repositorio
+git clone https://github.com/wiflore/mlops-uniandes-project.git
+cd mlops-uniandes-project
+
+# Crear entorno virtual
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# venv\Scripts\activate   # Windows
+
+# Instalar dependencias
+pip install -r requirements.txt
+```
+
+## 📅 Entregas
+
+| Entrega | Fecha Límite | Estado |
+|---------|--------------|--------|
+| Entrega 1 | 8 Feb, 2026 | 🔄 En progreso |
+| Entrega 2 | 22 Feb, 2026 | ⏳ Pendiente |
+| Entrega 3 | 10 Mar, 2026 | ⏳ Pendiente |
+
+## 📝 Licencia
+
+Este proyecto es para fines educativos - MAIA UniAndes 2026.

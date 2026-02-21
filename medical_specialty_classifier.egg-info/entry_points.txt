@@ -1,0 +1,3 @@
+[console_scripts]
+med-api = src.api:app
+med-train = src.train:train_models
