@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultados - MedTranscript Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .main-grid {
+            display: grid;
+            grid-template-columns: 1fr 1.2fr 1fr;
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .input-section textarea {
+            min-height: 200px;
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        .example-text {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: var(--bg-input);
+            border-radius: var(--radius-md);
+            border-left: 4px solid var(--primary-color);
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1.5rem;
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 0.75rem 1.5rem;
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--radius-lg);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .confidence-section {
+            margin: 1.5rem 0;
+        }
+
+        .confidence-bar {
+            height: 16px;
+            background: var(--bg-input);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--accent-teal));
+            border-radius: var(--radius-lg);
+        }
+
+        .confidence-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .top-specialties {
+            margin: 1.5rem 0;
+        }
+
+        .specialty-bar {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .specialty-name {
+            width: 100px;
+            font-weight: 500;
+            font-size: 0.875rem;
+        }
+
+        .specialty-track {
+            flex: 1;
+            height: 16px;
+            background: var(--bg-input);
+            border-radius: var(--radius-sm);
+            overflow: hidden;
+        }
+
+        .specialty-fill {
+            height: 100%;
+            border-radius: var(--radius-sm);
+        }
+
+        .specialty-fill.c1 {
+            background: var(--primary-color);
+        }
+
+        .specialty-fill.c2 {
+            background: var(--accent-purple);
+        }
+
+        .specialty-fill.c3 {
+            background: var(--accent-orange);
+        }
+
+        .specialty-value {
+            width: 40px;
+            text-align: right;
+            font-weight: 600;
+            font-size: 0.875rem;
+        }
+
+        .details-list {
+            list-style: disc;
+            padding-left: 1.25rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .details-list li {
+            margin-bottom: 0.5rem;
+        }
+
+        .file-upload {
+            border: 2px dashed var(--border-medium);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            background: var(--bg-input);
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .file-upload:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+
+        @media (max-width: 1200px) {
+            .main-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon">M</div>
+            <div class="logo-text">
+                <h1>MedTranscript Classifier</h1>
+                <p>NLP • Specialty Classification • ML API</p>
+            </div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="home.html">🏠 Home</a></li>
+            <li><a href="resultados.html" class="active">📊 Clasificar</a></li>
+            <li><a href="visualizaciones.html">📈 Visualizaciones</a></li>
+        </ul>
+        <div class="api-status">API: Online</div>
+    </nav>
+
+    <div class="container">
+        <div class="main-grid">
+            <!-- INPUT SECTION -->
+            <div class="card input-section">
+                <div class="card-header">
+                    <h2>📝 Entrada</h2>
+                </div>
+                <textarea class="form-textarea" placeholder="Pegar o escribir la transcripción médica aquí...">Ejemplo:
+Paciente masculino de 58 años con dolor torácico y disnea.
+Se realizó ECG y se observan cambios compatibles con isquemia.
+Troponina elevada. Historia de hipertensión arterial.</textarea>
+                <div class="btn-group">
+                    <button class="btn btn-primary">🔍 Clasificar</button>
+                    <button class="btn btn-secondary">🗑️ Limpiar</button>
+                </div>
+                <div style="margin-top: 2rem;">
+                    <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">📁 Subir .txt</h3>
+                    <div class="file-upload">
+                        <div style="font-size: 2rem; margin-bottom: 0.5rem;">📄</div>
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Arrastra un archivo o haz clic</p>
+                        <button
+                            style="margin-top: 0.75rem; padding: 0.5rem 1rem; background: white; border: 1px solid var(--border-light); border-radius: 6px; font-size: 0.875rem; cursor: pointer;">Elegir
+                            archivo</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- RESULTS SECTION -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Resultados</h2>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <p style="font-size: 0.875rem; color: var(--text-muted); margin-bottom: 0.5rem;">Especialidad
+                        predicha</p>
+                    <span class="result-badge">Cardiology</span>
+                </div>
+                <div class="confidence-section">
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <p style="font-size: 0.875rem; color: var(--text-muted);">Confianza del modelo</p>
+                        <span class="confidence-value">87<span style="font-size: 1rem;">%</span></span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill" style="width: 87%;"></div>
+                    </div>
+                </div>
+                <div class="top-specialties">
+                    <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Top 3 especialidades</h3>
+                    <div class="specialty-bar">
+                        <span class="specialty-name">Cardiology</span>
+                        <div class="specialty-track">
+                            <div class="specialty-fill c1" style="width: 87%;"></div>
+                        </div>
+                        <span class="specialty-value">87%</span>
+                    </div>
+                    <div class="specialty-bar">
+                        <span class="specialty-name">Orthopedic</span>
+                        <div class="specialty-track">
+                            <div class="specialty-fill c2" style="width: 6%;"></div>
+                        </div>
+                        <span class="specialty-value">6%</span>
+                    </div>
+                    <div class="specialty-bar">
+                        <span class="specialty-name">Neurology</span>
+                        <div class="specialty-track">
+                            <div class="specialty-fill c3" style="width: 4%;"></div>
+                        </div>
+                        <span class="specialty-value">4%</span>
+                    </div>
+                </div>
+                <div style="margin-top: 1.5rem; padding-top: 1.5rem; border-top: 1px solid var(--border-light);">
+                    <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">ℹ️ Detalles</h3>
+                    <ul class="details-list">
+                        <li>El texto se envía a la API del modelo vía HTTPS.</li>
+                        <li>Se registran resultados y confianza para auditoría.</li>
+                        <li>Se extraen keywords clínicas para apoyo a revisión.</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- QUICK VISUALIZATIONS -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📈 Vista Rápida</h2>
+                </div>
+                <div style="margin-bottom: 1.5rem;">
+                    <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Historial reciente</h3>
+                    <table style="width: 100%; font-size: 0.8rem;">
+                        <tr>
+                            <td style="color: var(--text-muted);">09:42</td>
+                            <td><strong>Cardiology</strong></td>
+                            <td style="text-align: right;">87%</td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--text-muted);">09:36</td>
+                            <td><strong>Pediatrics</strong></td>
+                            <td style="text-align: right;">72%</td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--text-muted);">09:28</td>
+                            <td><strong>Dermatology</strong></td>
+                            <td style="text-align: right;">65%</td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--text-muted);">09:14</td>
+                            <td><strong>Orthopedic</strong></td>
+                            <td style="text-align: right;">81%</td>
+                        </tr>
+                        <tr>
+                            <td style="color: var(--text-muted);">08:57</td>
+                            <td><strong>Neurology</strong></td>
+                            <td style="text-align: right;">69%</td>
+                        </tr>
+                    </table>
+                </div>
+                <div>
+                    <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">Palabras clave detectadas</h3>
+                    <div class="tags-container">
+                        <span class="tag badge-primary">dolor torácico</span>
+                        <span class="tag badge-warning">hipertensión</span>
+                        <span class="tag badge-teal">ECG</span>
+                        <span class="tag badge-purple">disnea</span>
+                        <span class="tag badge-warning">troponina</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

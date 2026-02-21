@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizaciones - MedTranscript Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .viz-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-container {
+            height: 250px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            padding: 1rem 0;
+        }
+
+        .chart-bar {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .chart-bar .bar {
+            width: 40px;
+            border-radius: 6px 6px 0 0;
+            transition: height 0.5s ease;
+        }
+
+        .chart-bar .label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            transform: rotate(180deg);
+            max-height: 80px;
+            overflow: hidden;
+        }
+
+        .chart-bar .value {
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .bar.blue {
+            background: var(--primary-color);
+        }
+
+        .bar.purple {
+            background: var(--accent-purple);
+        }
+
+        .bar.teal {
+            background: var(--accent-teal);
+        }
+
+        .bar.orange {
+            background: var(--accent-orange);
+        }
+
+        .bar.green {
+            background: var(--secondary-color);
+        }
+
+        .pie-chart {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary-color) 0deg 162deg, var(--accent-purple) 162deg 198deg, var(--accent-teal) 198deg 234deg, var(--accent-orange) 234deg 270deg, var(--secondary-color) 270deg 306deg, #95a5a6 306deg 360deg);
+            margin: 0 auto;
+            box-shadow: inset 0 0 0 40px var(--bg-card);
+        }
+
+        .pie-legend {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.8rem;
+        }
+
+        .legend-color {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+
+        .table-wrapper {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+
+        .data-table th {
+            background: var(--bg-input);
+            padding: 0.75rem 1rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            position: sticky;
+            top: 0;
+        }
+
+        .data-table td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-light);
+        }
+
+        .data-table tr:hover {
+            background: var(--bg-input);
+        }
+
+        .metric-cards {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: var(--radius-md);
+            padding: 1.25rem;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .metric-value {
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: var(--primary-color);
+        }
+
+        .metric-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .heatmap {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .heat-cell {
+            aspect-ratio: 1;
+            border-radius: 4px;
+        }
+
+        .heat-1 {
+            background: rgba(26, 115, 167, 0.1);
+        }
+
+        .heat-2 {
+            background: rgba(26, 115, 167, 0.3);
+        }
+
+        .heat-3 {
+            background: rgba(26, 115, 167, 0.5);
+        }
+
+        .heat-4 {
+            background: rgba(26, 115, 167, 0.7);
+        }
+
+        .heat-5 {
+            background: rgba(26, 115, 167, 0.9);
+        }
+
+        @media (max-width: 1024px) {
+            .viz-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metric-cards {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <div class="logo-icon">M</div>
+            <div class="logo-text">
+                <h1>MedTranscript Classifier</h1>
+                <p>NLP • Specialty Classification • ML API</p>
+            </div>
+        </div>
+        <ul class="nav-links">
+            <li><a href="home.html">🏠 Home</a></li>
+            <li><a href="resultados.html">📊 Clasificar</a></li>
+            <li><a href="visualizaciones.html" class="active">📈 Visualizaciones</a></li>
+        </ul>
+        <div class="api-status">API: Online</div>
+    </nav>
+
+    <div class="container">
+        <!-- Metrics Row -->
+        <div class="metric-cards">
+            <div class="metric-card">
+                <div class="metric-value">12,547</div>
+                <div class="metric-label">Total clasificaciones</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">94.7%</div>
+                <div class="metric-label">Precisión promedio</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">8</div>
+                <div class="metric-label">Especialidades</div>
+            </div>
+            <div class="metric-card">
+                <div class="metric-value">0.82s</div>
+                <div class="metric-label">Tiempo promedio</div>
+            </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="viz-grid">
+            <!-- Bar Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📊 Distribución de Especialidades (Dataset)</h2>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-bar">
+                        <div class="value">32</div>
+                        <div class="bar blue" style="height: 160px;"></div>
+                        <div class="label">Cardiology</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="value">18</div>
+                        <div class="bar purple" style="height: 90px;"></div>
+                        <div class="label">Orthopedic</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="value">15</div>
+                        <div class="bar teal" style="height: 75px;"></div>
+                        <div class="label">Neurology</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="value">14</div>
+                        <div class="bar orange" style="height: 70px;"></div>
+                        <div class="label">Pediatrics</div>
+                    </div>
+                    <div class="chart-bar">
+                        <div class="value">12</div>
+                        <div class="bar green" style="height: 60px;"></div>
+                        <div class="label">Dermatology</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pie Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🥧 Distribución Porcentual</h2>
+                </div>
+                <div class="pie-chart"></div>
+                <div class="pie-legend">
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--primary-color);"></div>Cardiology 45%
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--accent-purple);"></div>Orthopedic 10%
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--accent-teal);"></div>Neurology 10%
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--accent-orange);"></div>Pediatrics 10%
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: var(--secondary-color);"></div>Dermatology 10%
+                    </div>
+                    <div class="legend-item">
+                        <div class="legend-color" style="background: #95a5a6;"></div>Otros 15%
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Data Tables Row -->
+        <div class="viz-grid">
+            <!-- History Table -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>📋 Historial de Clasificaciones</h2>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Hora</th>
+                                <th>Especialidad</th>
+                                <th>Confianza</th>
+                                <th>Estado</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>09:42</td>
+                                <td><span class="badge badge-primary">Cardiology</span></td>
+                                <td><strong>87%</strong></td>
+                                <td>✅ Completado</td>
+                            </tr>
+                            <tr>
+                                <td>09:36</td>
+                                <td><span class="badge badge-purple">Pediatrics</span></td>
+                                <td><strong>72%</strong></td>
+                                <td>✅ Completado</td>
+                            </tr>
+                            <tr>
+                                <td>09:28</td>
+                                <td><span class="badge badge-teal">Dermatology</span></td>
+                                <td><strong>65%</strong></td>
+                                <td>⚠️ Revisar</td>
+                            </tr>
+                            <tr>
+                                <td>09:14</td>
+                                <td><span class="badge badge-warning">Orthopedic</span></td>
+                                <td><strong>81%</strong></td>
+                                <td>✅ Completado</td>
+                            </tr>
+                            <tr>
+                                <td>08:57</td>
+                                <td><span class="badge badge-primary">Neurology</span></td>
+                                <td><strong>69%</strong></td>
+                                <td>✅ Completado</td>
+                            </tr>
+                            <tr>
+                                <td>08:45</td>
+                                <td><span class="badge badge-primary">Cardiology</span></td>
+                                <td><strong>92%</strong></td>
+                                <td>✅ Completado</td>
+                            </tr>
+                            <tr>
+                                <td>08:32</td>
+                                <td><span class="badge badge-purple">Pediatrics</span></td>
+                                <td><strong>78%</strong></td>
+                                <td>✅ Completado</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Keywords & Activity -->
+            <div class="card">
+                <div class="card-header">
+                    <h2>🏷️ Palabras Clave Más Frecuentes</h2>
+                </div>
+                <div class="tags-container" style="margin-bottom: 1.5rem;">
+                    <span class="tag badge-primary" style="font-size: 1.1rem; padding: 0.75rem 1.25rem;">dolor
+                        torácico</span>
+                    <span class="tag badge-warning" style="font-size: 1rem; padding: 0.6rem 1rem;">hipertensión</span>
+                    <span class="tag badge-teal" style="font-size: 1rem; padding: 0.6rem 1rem;">ECG</span>
+                    <span class="tag badge-purple" style="font-size: 0.9rem;">disnea</span>
+                    <span class="tag badge-warning" style="font-size: 0.9rem;">troponina</span>
+                    <span class="tag badge-primary" style="font-size: 0.85rem;">fiebre</span>
+                    <span class="tag badge-teal" style="font-size: 0.85rem;">cefalea</span>
+                    <span class="tag badge-purple" style="font-size: 0.8rem;">fractura</span>
+                    <span class="tag badge-success" style="font-size: 0.8rem;">rash</span>
+                </div>
+                <h3 style="font-size: 0.875rem; margin-bottom: 1rem;">📅 Actividad Semanal</h3>
+                <div class="heatmap">
+                    <div class="heat-cell heat-2"></div>
+                    <div class="heat-cell heat-3"></div>
+                    <div class="heat-cell heat-5"></div>
+                    <div class="heat-cell heat-4"></div>
+                    <div class="heat-cell heat-2"></div>
+                    <div class="heat-cell heat-1"></div>
+                    <div class="heat-cell heat-1"></div>
+                    <div class="heat-cell heat-3"></div>
+                    <div class="heat-cell heat-4"></div>
+                    <div class="heat-cell heat-5"></div>
+                    <div class="heat-cell heat-3"></div>
+                    <div class="heat-cell heat-4"></div>
+                    <div class="heat-cell heat-2"></div>
+                    <div class="heat-cell heat-1"></div>
+                    <div class="heat-cell heat-4"></div>
+                    <div class="heat-cell heat-5"></div>
+                    <div class="heat-cell heat-4"></div>
+                    <div class="heat-cell heat-5"></div>
+                    <div class="heat-cell heat-3"></div>
+                    <div class="heat-cell heat-2"></div>
+                    <div class="heat-cell heat-1"></div>
+                    <div class="heat-cell heat-2"></div>
+                    <div class="heat-cell heat-3"></div>
+                    <div class="heat-cell heat-4"></div>
+                    <div class="heat-cell heat-3"></div>
+                    <div class="heat-cell heat-5"></div>
+                    <div class="heat-cell heat-1"></div>
+                    <div class="heat-cell heat-1"></div>
+                </div>
+                <div
+                    style="display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.7rem; color: var(--text-muted);">
+                    <span>Lun</span><span>Mar</span><span>Mié</span><span>Jue</span><span>Vie</span><span>Sáb</span><span>Dom</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+
+</html>

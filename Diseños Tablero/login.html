@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MedTranscript Classifier</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Login Page Specific Styles */
+        .login-page {
+            min-height: 100vh;
+            display: flex;
+            background: linear-gradient(135deg, #1a73a7 0%, #145a82 50%, #0d3d5c 100%);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Decorative elements */
+        .login-page::before {
+            content: '';
+            position: absolute;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            top: -200px;
+            right: -200px;
+            border-radius: 50%;
+        }
+
+        .login-page::after {
+            content: '';
+            position: absolute;
+            width: 400px;
+            height: 400px;
+            background: radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 70%);
+            bottom: -100px;
+            left: -100px;
+            border-radius: 50%;
+        }
+
+        /* Left panel - Branding */
+        .login-branding {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            color: white;
+            position: relative;
+            z-index: 1;
+        }
+
+        .login-branding .logo-icon {
+            width: 80px;
+            height: 80px;
+            background: rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+        }
+
+        .login-branding h1 {
+            font-size: 3rem;
+            color: white;
+            margin-bottom: 1rem;
+        }
+
+        .login-branding p {
+            font-size: 1.25rem;
+            color: rgba(255,255,255,0.8);
+            max-width: 400px;
+            line-height: 1.8;
+        }
+
+        .features-list {
+            margin-top: 3rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .feature-icon {
+            width: 48px;
+            height: 48px;
+            background: rgba(255,255,255,0.15);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+        }
+
+        .feature-text h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .feature-text p {
+            font-size: 0.875rem;
+            color: rgba(255,255,255,0.6);
+        }
+
+        /* Right panel - Login form */
+        .login-form-container {
+            width: 500px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 4rem;
+            position: relative;
+            z-index: 1;
+            border-radius: 32px 0 0 32px;
+            box-shadow: -10px 0 60px rgba(0,0,0,0.2);
+        }
+
+        .login-form-header {
+            margin-bottom: 2.5rem;
+        }
+
+        .login-form-header h2 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .login-form-header p {
+            color: var(--text-muted);
+        }
+
+        .login-form .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .login-form .form-label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .login-form .form-input {
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+        }
+
+        .password-input-wrapper {
+            position: relative;
+        }
+
+        .password-toggle {
+            position: absolute;
+            right: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 1.25rem;
+        }
+
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .checkbox-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .checkbox-wrapper input {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--primary-color);
+        }
+
+        .checkbox-wrapper label {
+            font-size: 0.875rem;
+            color: var(--text-secondary);
+        }
+
+        .forgot-link {
+            font-size: 0.875rem;
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 1rem;
+            font-size: 1.125rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 1.5rem 0;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border-light);
+        }
+
+        .divider span {
+            padding: 0 1rem;
+        }
+
+        .social-login {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .social-btn {
+            flex: 1;
+            padding: 0.875rem;
+            background: var(--bg-input);
+            border: 2px solid var(--border-light);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            transition: var(--transition);
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+        }
+
+        .social-btn:hover {
+            border-color: var(--primary-color);
+            background: var(--primary-light);
+        }
+
+        .social-btn img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .signup-link {
+            text-align: center;
+            margin-top: 2rem;
+            color: var(--text-secondary);
+            font-size: 0.875rem;
+        }
+
+        .signup-link a {
+            color: var(--primary-color);
+            font-weight: 600;
+            text-decoration: none;
+        }
+
+        .signup-link a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .login-branding {
+                display: none;
+            }
+            
+            .login-form-container {
+                width: 100%;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="login-page">
+        <!-- Left Panel - Branding -->
+        <div class="login-branding">
+            <div class="logo-icon">M</div>
+            <h1>MedTranscript<br>Classifier</h1>
+            <p>Plataforma de clasificación inteligente de transcripciones médicas usando NLP y Machine Learning.</p>
+            
+            <div class="features-list">
+                <div class="feature-item">
+                    <div class="feature-icon">🔬</div>
+                    <div class="feature-text">
+                        <h4>Clasificación por Especialidad</h4>
+                        <p>Detecta automáticamente la especialidad médica</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">📊</div>
+                    <div class="feature-text">
+                        <h4>Análisis de Confianza</h4>
+                        <p>Métricas de precisión en tiempo real</p>
+                    </div>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-text">
+                        <h4>Seguridad HIPAA</h4>
+                        <p>Cumplimiento con estándares médicos</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Login Form -->
+        <div class="login-form-container">
+            <div class="login-form-header">
+                <h2>Bienvenido</h2>
+                <p>Ingresa tus credenciales para acceder</p>
+            </div>
+
+            <form class="login-form" action="home.html">
+                <div class="form-group">
+                    <label class="form-label" for="email">Correo electrónico</label>
+                    <input type="email" id="email" class="form-input" placeholder="tu@email.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="password">Contraseña</label>
+                    <div class="password-input-wrapper">
+                        <input type="password" id="password" class="form-input" placeholder="••••••••" required>
+                        <button type="button" class="password-toggle" onclick="togglePassword()">👁</button>
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <div class="checkbox-wrapper">
+                        <input type="checkbox" id="remember">
+                        <label for="remember">Recordarme</label>
+                    </div>
+                    <a href="#" class="forgot-link">¿Olvidaste tu contraseña?</a>
+                </div>
+
+                <button type="submit" class="btn btn-primary login-btn">
+                    Iniciar Sesión
+                </button>
+
+                <div class="divider">
+                    <span>o continúa con</span>
+                </div>
+
+                <div class="social-login">
+                    <button type="button" class="social-btn">
+                        <span>🔷</span> Microsoft
+                    </button>
+                    <button type="button" class="social-btn">
+                        <span>🔴</span> Google
+                    </button>
+                </div>
+
+                <p class="signup-link">
+                    ¿No tienes cuenta? <a href="#">Regístrate aquí</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function togglePassword() {
+            const password = document.getElementById('password');
+            password.type = password.type === 'password' ? 'text' : 'password';
+        }
+    </script>
+</body>
+</html>
