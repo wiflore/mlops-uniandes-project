@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/feliperomero/mlops-uniandes-project/mlruns/392884417898219332/9b533d2b9517412aaaa3ab60d3476dc4/artifacts
+end_time: 1771775635848
+entry_point_name: ''
+experiment_id: '392884417898219332'
+lifecycle_stage: active
+run_id: 9b533d2b9517412aaaa3ab60d3476dc4
+run_name: XGB_MS50_D4
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1771775589810
+status: 3
+tags: []
+user_id: feliperomero

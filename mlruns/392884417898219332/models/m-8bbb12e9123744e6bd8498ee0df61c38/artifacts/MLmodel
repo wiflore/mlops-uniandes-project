@@ -1,0 +1,22 @@
+artifact_path: file:///Users/feliperomero/mlops-uniandes-project/mlruns/392884417898219332/models/m-8bbb12e9123744e6bd8498ee0df61c38/artifacts
+flavors:
+  python_function:
+    data: model.ubj
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.xgboost
+    python_version: 3.12.12
+  xgboost:
+    code: null
+    data: model.ubj
+    model_class: xgboost.sklearn.XGBClassifier
+    model_format: ubj
+    xgb_version: 3.2.0
+mlflow_version: 3.10.0
+model_id: m-8bbb12e9123744e6bd8498ee0df61c38
+model_size_bytes: 2309295
+model_uuid: m-8bbb12e9123744e6bd8498ee0df61c38
+prompts: null
+run_id: 6c38ee6ff8ab42c5a9a254165ef3aac7
+utc_time_created: '2026-02-22 15:52:23.883315'

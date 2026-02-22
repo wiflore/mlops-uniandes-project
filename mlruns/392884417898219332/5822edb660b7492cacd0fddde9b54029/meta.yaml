@@ -1,0 +1,14 @@
+artifact_uri: file:///Users/feliperomero/mlops-uniandes-project/mlruns/392884417898219332/5822edb660b7492cacd0fddde9b54029/artifacts
+end_time: 1771775638948
+entry_point_name: ''
+experiment_id: '392884417898219332'
+lifecycle_stage: active
+run_id: 5822edb660b7492cacd0fddde9b54029
+run_name: LogReg_MS50_C0.1
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1771775635851
+status: 3
+tags: []
+user_id: feliperomero
