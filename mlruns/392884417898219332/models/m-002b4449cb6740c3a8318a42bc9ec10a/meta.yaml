@@ -1,0 +1,10 @@
+artifact_location: file:///Users/feliperomero/mlops-uniandes-project/mlruns/392884417898219332/models/m-002b4449cb6740c3a8318a42bc9ec10a/artifacts
+creation_timestamp: 1771772932106
+experiment_id: '392884417898219332'
+last_updated_timestamp: 1771772935764
+model_id: m-002b4449cb6740c3a8318a42bc9ec10a
+model_type: null
+name: modelo_xgboost
+source_run_id: dfbc57c07fda4949a61ea5e3578d2ce5
+status: 2
+status_message: null

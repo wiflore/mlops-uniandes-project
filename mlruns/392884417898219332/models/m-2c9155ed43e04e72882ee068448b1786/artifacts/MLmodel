@@ -1,0 +1,23 @@
+artifact_path: file:///Users/feliperomero/mlops-uniandes-project/mlruns/392884417898219332/models/m-2c9155ed43e04e72882ee068448b1786/artifacts
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.12.12
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.8.0
+    skops_trusted_types: null
+mlflow_version: 3.10.0
+model_id: m-2c9155ed43e04e72882ee068448b1786
+model_size_bytes: 800870
+model_uuid: m-2c9155ed43e04e72882ee068448b1786
+prompts: null
+run_id: 06b7665296c049539f387b27d3f7637c
+utc_time_created: '2026-02-22 15:09:53.744175'

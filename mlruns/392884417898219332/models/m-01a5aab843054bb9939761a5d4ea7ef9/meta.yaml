@@ -1,0 +1,10 @@
+artifact_location: file:///Users/feliperomero/mlops-uniandes-project/mlruns/392884417898219332/models/m-01a5aab843054bb9939761a5d4ea7ef9/artifacts
+creation_timestamp: 1771775584844
+experiment_id: '392884417898219332'
+last_updated_timestamp: 1771775587849
+model_id: m-01a5aab843054bb9939761a5d4ea7ef9
+model_type: null
+name: modelo_logreg
+source_run_id: 9fd327d8115d464cb083afff4a1a5b69
+status: 2
+status_message: null
