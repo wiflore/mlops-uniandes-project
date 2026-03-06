@@ -52,10 +52,20 @@ class S3LoggingMiddleware(BaseHTTPMiddleware):
         # 2. Dejar que el endpoint procese normalmente
         response = await call_next(request)
 
-        # 3. Calcular tiempo de respuesta
+        # 3. Capturar cuerpo de la respuesta (consumiendo el iterador)
+        response_body = b""
+        async for chunk in response.body_iterator:
+            response_body += chunk
+            
+        # Reconstruir el iterador para que la API siga devolviendo la info al cliente
+        async def new_body_iterator():
+            yield response_body
+        response.body_iterator = new_body_iterator()
+
+        # 4. Calcular tiempo de respuesta
         elapsed_ms = round((time.time() - start_time) * 1000, 2)
 
-        # 4. Crear log validado con Pydantic
+        # 5. Crear log validado con Pydantic
         try:
             log_entry = ApiCallLog(
                 request_id=str(uuid.uuid4()),
@@ -63,6 +73,7 @@ class S3LoggingMiddleware(BaseHTTPMiddleware):
                 method=request.method,
                 path=str(request.url.path),
                 request_body=body.decode("utf-8", errors="ignore"),
+                response_body=response_body.decode("utf-8", errors="ignore"),
                 status_code=response.status_code,
                 response_time_ms=elapsed_ms,
             )

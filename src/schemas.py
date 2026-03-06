@@ -39,6 +39,7 @@ class ApiCallLog(BaseModel):
     method: str = Field(..., description="Metodo HTTP (GET, POST)")
     path: str = Field(..., description="Ruta del endpoint (/predict, /health)")
     request_body: str = Field(default="", description="Cuerpo del request")
+    response_body: str = Field(default="", description="Cuerpo de la respuesta (prediccion)")
     status_code: int = Field(..., description="Codigo de respuesta HTTP")
     response_time_ms: float = Field(..., description="Tiempo de respuesta en ms")
 
