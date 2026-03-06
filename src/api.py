@@ -6,12 +6,16 @@ import os
 from fastapi import FastAPI, HTTPException
 from .schemas import PredictionRequest, PredictionResponse, HealthResponse
 from .predict import MedicalSpecialtyPredictor
+from .middleware_logging import S3LoggingMiddleware
 
 app = FastAPI(
     title="Medical Specialty Classifier API",
     description="Clasifica transcripciones medicas por especialidad",
     version="0.1.0"
 )
+
+# Middleware: captura cada API call y lo envia a S3 zona analitica
+app.add_middleware(S3LoggingMiddleware)
 
 MODELS_DIR = os.environ.get("MODELS_DIR", "models")
 MODEL_NAME = os.environ.get("MODEL_NAME", "logreg")
