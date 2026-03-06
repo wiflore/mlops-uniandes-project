@@ -41,6 +41,10 @@ class S3LoggingMiddleware(BaseHTTPMiddleware):
     """
 
     async def dispatch(self, request, call_next):
+        # Ignorar rutas de documentacion de FastAPI
+        if request.url.path in ["/docs", "/redoc", "/openapi.json"]:
+            return await call_next(request)
+
         # 1. Capturar datos del request ANTES de procesarlo
         start_time = time.time()
         body = await request.body()

@@ -39,3 +39,6 @@ ignore/
 # Temporary files
 *.tmp
 *.temp
+
+# AWS configurations
+task-definition.json

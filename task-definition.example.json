@@ -1,0 +1,39 @@
+{
+    "family": "mlops-medical-api",
+    "taskRoleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/LabRole",
+    "executionRoleArn": "arn:aws:iam::<AWS_ACCOUNT_ID>:role/LabRole",
+    "networkMode": "awsvpc",
+    "cpu": "512",
+    "memory": "1024",
+    "requiresCompatibilities": [
+        "FARGATE"
+    ],
+    "containerDefinitions": [
+        {
+            "name": "mlops-medical-api-container",
+            "image": "<AWS_ACCOUNT_ID>.dkr.ecr.<AWS_REGION>.amazonaws.com/mlops-medical-api:latest",
+            "portMappings": [
+                {
+                    "containerPort": 8000,
+                    "hostPort": 8000,
+                    "protocol": "tcp"
+                }
+            ],
+            "essential": true,
+            "environment": [
+                {
+                    "name": "S3_BUCKET",
+                    "value": "<YOUR_S3_BUCKET_NAME>"
+                }
+            ],
+            "logConfiguration": {
+                "logDriver": "awslogs",
+                "options": {
+                    "awslogs-group": "/ecs/mlops-medical-api",
+                    "awslogs-region": "<AWS_REGION>",
+                    "awslogs-stream-prefix": "ecs"
+                }
+            }
+        }
+    ]
+}
