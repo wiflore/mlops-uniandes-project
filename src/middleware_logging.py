@@ -21,7 +21,7 @@ from .schemas import ApiCallLog
 logger = logging.getLogger(__name__)
 
 # Configuracion S3
-S3_BUCKET = os.environ.get("S3_BUCKET", "mlops-medical-project")
+S3_BUCKET = os.environ.get("S3_BUCKET", "mlops-medical-project-uniandes-2026")
 S3_PREFIX = os.environ.get("S3_LOG_PREFIX", "analytics/api-calls")
 
 # Cliente S3 (se inicializa una sola vez al importar el modulo)

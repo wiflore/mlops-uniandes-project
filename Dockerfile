@@ -42,7 +42,7 @@ RUN chmod +x entrypoint.sh
 RUN mkdir -p models
 
 # Variables de entorno por defecto
-ENV S3_BUCKET=mlops-medical-project
+ENV S3_BUCKET=mlops-medical-project-uniandes-2026
 ENV MODELS_DIR=models
 ENV MODEL_NAME=logreg
 
