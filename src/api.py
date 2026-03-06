@@ -51,12 +51,14 @@ async def predict(request: PredictionRequest):
 
 
 security = HTTPBearer()
-API_SECRET_KEY = os.environ.get("API_SECRET_KEY", "academic_mlops_secret")
+# La clave secreta se inyecta desde AWS ECS Task Definition
+# No hay fallback hardcodeado para no exponerlo en el repo publico
+API_SECRET_KEY = os.environ.get("API_SECRET_KEY")
 
 @app.get("/dashboard-data")
 async def get_dashboard_data(credentials: HTTPAuthorizationCredentials = Depends(security)):
-    """Endpoint para exportar los logs de S3 al Dashboard de Streamlit."""
-    if credentials.credentials != API_SECRET_KEY:
+    """Endpoint para exportar los logs de S3 al Dashboard."""
+    if not API_SECRET_KEY or credentials.credentials != API_SECRET_KEY:
         raise HTTPException(status_code=401, detail="Invalid API Key")
     
     s3_bucket = os.environ.get("S3_BUCKET", "mlops-medical-project-uniandes-2026")

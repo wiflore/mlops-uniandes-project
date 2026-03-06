@@ -28,12 +28,16 @@ Implementamos un bucket unificado en Amazon S3 (`mlops-medical-project-uniandes-
 - **Zona Analítica (`/analytics`):** Entorno de escritura. Un middleware en la API intercepta asíncronamente cada request HTTP y guarda la entrada del usuario junto con la predicción del modelo en formato JSON para futuro monitoreo de *Data Drift*.
 
 **Acceso Downstream para el Dashboard (Streaming de Históricos):**
-Para desacoplar el frontend del almacenamiento subyacente y proteger las credenciales de AWS, se expone un endpoint dedicado en la API (`GET /dashboard-data`). En lugar de que Streamlit consulte S3 directamente, este endpoint funciona como un puente: lee los registros históricos en la Zona Analítica, los consolida y los retorna al Dashboard en un formato estructurado y unificado.
+Para desacoplar el frontend del almacenamiento subyacente y proteger las credenciales de AWS, se expone un endpoint dedicado en la API (`GET /dashboard-data`). En lugar de que Frontend consulte S3 directamente, este endpoint funciona como un puente: lee los registros históricos en la Zona Analítica, los consolida y los retorna al Frontend en un formato estructurado y unificado.
 
 El endpoint está protegido por Autenticación Simple. El dashboard debe enviar:
-`Headers: { "Authorization": "Bearer <API_SECRET_KEY>" }`
+`Headers: { "Authorization": "Bearer <API_SECRET_KEY_DEL_PROYECTO>" }`
 
-*(Opcional) Guardar `API_SECRET_KEY=academic_mlops_secret` en los secrets de Streamlit.*
+> **Nota para Pruebas (Swagger UI o Terminal):**
+> Dado que el endpoint requiere un *Bearer Token*, acceder desde la barra de direcciones arrojará un error `401 Unauthorized`. 
+> - **Opción A (Visual):** Entre a `http://<IP_API>:8000/docs`, haga clic en "Authorize", pegue su token secreto y testee el `GET /dashboard-data` dando clic a "Try it out".
+> - **Opción B (cURL):** Ejecute en su consola: 
+>   `curl -s -H "Authorization: Bearer <API_SECRET>" http://<IP_API>:8000/dashboard-data`
 
 **Estructura de la Respuesta (`/dashboard-data`):**
 Devuelve un JSON con una lista consolidada `data` que contiene el histórico de predicciones. Cada elemento respeta el esquema `ApiCallLog`:
@@ -56,7 +60,7 @@ Devuelve un JSON con una lista consolidada `data` que contiene el histórico de 
 ```
 *Con esta estructura, el frontend puede deserializar fácilmente `request_body` y `response_body` usando `pandas.json_normalize()` para graficar uso de modelos, confianzas promedio y distribuciones de especialidades.*
 
-### Diagrama de Flujo (Mermaid)
+### Diagrama de Flujo MLOps (Mermaid)
 
 ```mermaid
 graph TD
@@ -64,8 +68,10 @@ graph TD
     classDef data fill:#E8F4F8,stroke:#0073BB,stroke-width:2px,color:black;
     classDef client fill:#D4EDDA,stroke:#28A745,stroke-width:2px,color:black;
 
-    U((Usuario / Dashboard)):::client -- POST /predict --> ALB[ALB Balanceador]:::aws
-    ALB -- Enruta --> ECS[API Container<br/>ECS Fargate]:::aws
+    Usuario((Cliente Médicos)):::client -- POST /predict --> ALB
+    Dash((Dashboard<br/>Streamlit)):::client -- GET /dashboard-data<br/>Token Auth --> ALB
+    
+    ALB[ALB Balanceador]:::aws -- Enruta Tráfico --> ECS[API Container<br/>ECS Fargate]:::aws
     
     subgraph S3 Data Lake
         G[Zona Golden<br/>s3://.../golden/]:::data
@@ -75,5 +81,6 @@ graph TD
     DVC[(DVC Remote)] -- Control Versiones --> G
     
     G -. Descarga Modelo<br/>Al Iniciar .- ECS
-    ECS -- Middleware Loguea<br/>Texto + Predicción --> A
+    ECS -- Guarda Log (Middleware) --> A
+    A -. Descarga Histórico<br/>JSONs .- ECS
 ```
