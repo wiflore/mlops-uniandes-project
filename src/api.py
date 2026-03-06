@@ -3,8 +3,14 @@ API FastAPI para clasificacion de especialidades medicas.
 Ejecutar: uvicorn src.api:app --reload
 """
 import os
-from fastapi import FastAPI, HTTPException
-from .schemas import PredictionRequest, PredictionResponse, HealthResponse
+import time
+import uuid
+from datetime import datetime, timezone
+import boto3
+import json
+from fastapi import FastAPI, HTTPException, Depends
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from .schemas import PredictionRequest, PredictionResponse, HealthResponse, ApiCallLog
 from .predict import MedicalSpecialtyPredictor
 from .middleware_logging import S3LoggingMiddleware
 
@@ -42,3 +48,34 @@ async def predict(request: PredictionRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+
+security = HTTPBearer()
+API_SECRET_KEY = os.environ.get("API_SECRET_KEY", "academic_mlops_secret")
+
+@app.get("/dashboard-data")
+async def get_dashboard_data(credentials: HTTPAuthorizationCredentials = Depends(security)):
+    """Endpoint para exportar los logs de S3 al Dashboard de Streamlit."""
+    if credentials.credentials != API_SECRET_KEY:
+        raise HTTPException(status_code=401, detail="Invalid API Key")
+    
+    s3_bucket = os.environ.get("S3_BUCKET", "mlops-medical-project-uniandes-2026")
+    s3_client = boto3.client("s3")
+    
+    try:
+        # Listar objetos en el prefijo analytics/api-calls/
+        response = s3_client.list_objects_v2(Bucket=s3_bucket, Prefix="analytics/api-calls/")
+        if "Contents" not in response:
+            return {"data": []}
+            
+        all_logs = []
+        for obj in response["Contents"]:
+            if obj["Key"].endswith(".json"):
+                # Descargar y parsear cada JSON
+                file_obj = s3_client.get_object(Bucket=s3_bucket, Key=obj["Key"])
+                file_content = file_obj["Body"].read().decode("utf-8")
+                all_logs.append(json.loads(file_content))
+                
+        return {"data": all_logs}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading from S3: {str(e)}")
