@@ -1,0 +1,20 @@
+# Dependencias SOLO para runtime de la API (imagen Docker ligera)
+# No incluye: jupyter, matplotlib, seaborn, plotly, mlflow, dvc, streamlit
+
+# Web framework
+fastapi>=0.110.0
+uvicorn>=0.27.0
+pydantic>=2.5.0
+
+# ML runtime (para cargar y ejecutar el modelo)
+scikit-learn==1.8.0
+numpy>=1.24.0
+scipy>=1.10.0
+joblib>=1.3.0
+xgboost>=2.0.0
+
+# NLP
+nltk>=3.8.0
+
+# AWS (para descargar modelos de S3 y loguear API calls)
+boto3>=1.34.0
