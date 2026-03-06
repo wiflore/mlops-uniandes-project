@@ -60,27 +60,19 @@ Devuelve un JSON con una lista consolidada `data` que contiene el histórico de 
 ```
 *Con esta estructura, el frontend puede deserializar fácilmente `request_body` y `response_body` usando `pandas.json_normalize()` para graficar uso de modelos, confianzas promedio y distribuciones de especialidades.*
 
-### Diagrama de Flujo MLOps (Mermaid)
+### Diagrama de Flujo MLOps (Estructura)
 
-```mermaid
-graph TD
-    classDef aws fill:#FF9900,stroke:#232F3E,stroke-width:2px,color:black,font-weight:bold;
-    classDef data fill:#E8F4F8,stroke:#0073BB,stroke-width:2px,color:black;
-    classDef client fill:#D4EDDA,stroke:#28A745,stroke-width:2px,color:black;
+La arquitectura sigue el patrón **API Gateway** con almacenamiento desacoplado:
 
-    Usuario((Cliente Médicos)):::client -- POST /predict --> ALB
-    Dash((Dashboard<br/>Streamlit)):::client -- GET /dashboard-data<br/>Token Auth --> ALB
-    
-    ALB[ALB Balanceador]:::aws -- Enruta Tráfico --> ECS[API Container<br/>ECS Fargate]:::aws
-    
-    subgraph S3 Data Lake
-        G[Zona Golden<br/>s3://.../golden/]:::data
-        A[Zona Analítica<br/>s3://.../analytics/]:::data
-    end
-    
-    DVC[(DVC Remote)] -- Control Versiones --> G
-    
-    G -. Descarga Modelo<br/>Al Iniciar .- ECS
-    ECS -- Guarda Log (Middleware) --> A
-    A -. Descarga Histórico<br/>JSONs .- ECS
-```
+1. **Interacción de los Clientes:**
+   - **Usuarios / Médicos:** Envían la transcripción usando el método `POST /predict`. Las peticiones llegan Directamente a la IP Pública Expuesta por AWS.
+   - **Dashboard (Streamlit):** Consume el histórico usando el método `GET /dashboard-data`, enviando el token de autenticación a la misma IP.
+
+2. **Capa de Cómputo (AWS ECS Fargate):**
+   - El contenedor FastAPI recibe el tráfico gracias a su Interfaz de Red Elástica (ENI) pública asignada por Fargate.
+   - Al encender, el contenedor descarga los modelos de Machine Learning pre-entrenados desde la *Zona Golden* de S3.
+
+3. **Capa de Almacenamiento (S3 Data Lake) y DVC:**
+   - **Zona Golden (`/golden`):** Contiene los datos crudos (`mtsamples.csv`) versionados por el remoto de **DVC** y los modelos serializados (`.joblib`). Es de **solo lectura** para la API.
+   - **Zona Analítica (`/analytics`):** Cada vez que la API hace una predicción, un *middleware* guarda silenciosamente el texto original y la predicción en formato JSON.
+   - Cuando el Dashboard pide los datos, la API descarga y unifica estos JSONs de la *Zona Analítica* para enviarlos listos para graficar.
