@@ -37,7 +37,12 @@ mlops-uniandes-project/
 └── docs/                  # Documentación
 ```
 
-## 🚀 Configuración
+## 🚀 Configuración y Despliegue
+
+### Despliegue en la Nube
+Para desplegar el Frontend de la aplicación (Streamlit) en la nube te invitamos a consultar nuestro **[Tutorial de Despliegue en Railway](docs/tutorial_railway.md)**.
+
+### Configuración Local
 
 ```bash
 # Clonar repositorio
