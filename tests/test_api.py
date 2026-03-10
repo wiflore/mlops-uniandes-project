@@ -4,18 +4,16 @@ Tests para la API FastAPI (src.api).
 import os
 import pytest
 from fastapi.testclient import TestClient
+
+# conftest.py ya parchea S3 e importa la app; reutilizamos el mismo objeto.
 from src.api import app
 
 
 MODELS_DIR = os.environ.get("MODELS_DIR", "models")
 MODELS_EXIST = os.path.exists(os.path.join(MODELS_DIR, "logreg_model.joblib"))
 
-
-@pytest.fixture
-def client():
-    """Cliente de testing de FastAPI."""
-    with TestClient(app) as c:
-        yield c
+# 'client' fixture se hereda de conftest.py (scope="session") cuando no se
+# redefine localmente; la siguiente fixture local mantiene la compatibilidad.
 
 
 @pytest.mark.skipif(not MODELS_EXIST, reason="Modelos no serializados. Corra 'python -m src.train' primero.")
