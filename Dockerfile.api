@@ -1,0 +1,31 @@
+# ============================================
+# Dockerfile.api — API de Clasificación Médica (Fargate Optimized)
+# ============================================
+FROM python:3.11-slim
+
+ENV DEBIAN_FRONTEND=noninteractive
+
+WORKDIR /app
+
+# Instalar dependencias puras de la API
+COPY requirements-api.txt .
+RUN pip install --no-cache-dir -r requirements-api.txt
+
+# Descargar stopwords de NLTK durante el build
+RUN python -c "import nltk; nltk.download('stopwords', quiet=True)"
+
+# Copiar el modelo de ML directamente a la imagen (Stateless design)
+# Esto requiere que la carpeta models/ con los artefactos se encuentre en el build context
+COPY models/ ./models/
+
+# Copiar el código fuente de la API
+COPY src/ ./src/
+
+# Variables de entorno por defecto
+ENV MODELS_DIR=models
+ENV MODEL_NAME=logreg
+
+EXPOSE 8000
+
+# Arrancar directamente con Uvicorn en lugar de un bash script
+CMD ["uvicorn", "src.api:app", "--host", "0.0.0.0", "--port", "8000"]

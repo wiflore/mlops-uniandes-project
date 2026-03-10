@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  # ---------------------------------------------
+  # Servicio: API Backend
+  # ---------------------------------------------
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: medtranscript-api
+    ports:
+      - "8000:8000"
+    environment:
+      - MODELS_DIR=models
+      - MODEL_NAME=logreg
+      # Opcional: Solo si el Middleware_logging lo requiere para Analytics S3
+      - S3_BUCKET=mlops-medical-project-uniandes-2026
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - API_SECRET_KEY=${API_SECRET_KEY:-}
+
+  # ---------------------------------------------
+  # Servicio: Frontend Streamlit
+  # ---------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    container_name: medtranscript-frontend
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+    environment:
+      # Sobrescribimos el localhost y apuntamos al contenedor de la API HTTP interna
+      - API_URL=http://api:8000

@@ -18,10 +18,12 @@ def load_css(file_name):
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # Asumiendo que se corre desde la raíz del proyecto
-load_css("Diseños Tablero/styles.css")
+load_css("styles.css")
 
 # --- VARIABLES GLOBALES ---
-API_URL = "http://localhost:8000"
+# Usar variable de entorno con fallback a localhost para desarrollo local nativo
+import os
+API_URL = os.environ.get("API_URL", "http://localhost:8000")
 
 # --- INYECTAR NAVBAR ORIGINAL ---
 navbar_html = """
