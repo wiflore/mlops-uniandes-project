@@ -1,0 +1,29 @@
+// Flujo de Modelado y NLP
+digraph ModelDecisions {
+	bgcolor=transparent rankdir=TB
+	node [color="#dee2e6" fillcolor="#f8f9fa" fontname=Helvetica shape=box style="filled,rounded"]
+	edge [color="#adb5bd" fontname=Helvetica fontsize=10]
+	subgraph cluster_nlp {
+		fontname="Helvetica-Bold" label="Preprocesamiento NLP"
+		Text [label="Transcripción Libre" fillcolor="#e9ecef"]
+		Clean [label="Limpieza Regex
+(Remover stopwords y ruido)" fillcolor="#cce5ff"]
+		TFIDF [label="Vectorización TF-IDF (n-grams)
+(Captura contexto clínico multi-palabra
+ej. \"ataque cardíaco\" vs \"ataque\" y \"cardíaco\")" fillcolor="#d4edda" shape=note]
+		Text -> Clean
+		Clean -> TFIDF
+	}
+	subgraph cluster_model {
+		fontname="Helvetica-Bold" label="Evaluación Multi-etiqueta (XGBoost)"
+		Softmax [label="Softmax (Antiguo)
+Suma=100%
+\"Fuerza\" mutuamente excluyente" color="#dc3545" fillcolor="#f8d7da"]
+		Sigmoid [label="Sigmoid Independiente (Actual)
+Suma libre
+Realidad clínica: el texto cruza
+múltiples especialidades (>80% c/u)" color="#198754" fillcolor="#d1e7dd"]
+		Softmax -> Sigmoid [label=" Refactor MLOps" color="#dc3545" dir=forward style=dashed]
+	}
+	TFIDF -> Sigmoid [label=" Input Escaso (Sparse)" lhead=cluster_model ltail=cluster_nlp]
+}

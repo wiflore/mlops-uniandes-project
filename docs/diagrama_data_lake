@@ -1,0 +1,20 @@
+// Arquitectura de Datos y MLOps
+digraph DataLake {
+	bgcolor=transparent rankdir=LR
+	node [color="#dee2e6" fillcolor="#f8f9fa" fontname=Helvetica shape=box style="filled,rounded"]
+	edge [color="#adb5bd" fontname=Helvetica fontsize=10]
+	A [label="Datos Clínicos Crudos
+(Texto libre)" color="#ffc107" fillcolor="#ffeeba"]
+	B [label="Data Lake (Amazon S3)
+Zona Golden (Inmutable)" color="#b8daff" fillcolor="#cce5ff"]
+	C [label="API Producción
+(AWS ECS Fargate)" color="#c3e6cb" fillcolor="#d4edda"]
+	D [label="Data Lake (Amazon S3)
+Zona Analytics (Monitoreo)" color="#d6c8ea" fillcolor="#e2d9f3"]
+	A -> B [label=" Limpieza +
+ TF-IDF n-grams"]
+	B -> C [label=" Modelos (
+.joblib) DVC"]
+	C -> D [label=" Logs Inferencia
+ (Data Drift)"]
+}

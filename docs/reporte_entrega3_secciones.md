@@ -37,6 +37,9 @@ Para desacoplar el frontend del almacenamiento subyacente y proteger las credenc
 
 ![Arquitectura AWS](arquitectura_aws.png)
 
+### Diagrama de Flujo del Data Lake
+![Data Lake](img/diagrama_data_lake.png)
+
 La arquitectura sigue el patrón **API Gateway** con almacenamiento desacoplado:
 
 1. **Usuarios / Médicos** → acceden al frontend Streamlit desplegado en Railway.
@@ -46,7 +49,7 @@ La arquitectura sigue el patrón **API Gateway** con almacenamiento desacoplado:
 
 ---
 
-## 4. Corrección del Pipeline de Entrenamiento
+## 4. Corrección del Pipeline de Entrenamiento y MLflow
 
 ### Problema Detectado
 
@@ -88,6 +91,9 @@ Se cambió `predict.py` para usar la función **sigmoid** aplicada a las puntuac
 2. **Consistencia con el rendimiento real:** El modelo tiene un accuracy del 89.8%, pero softmax forzaba confianzas artificialmente bajas. Sigmoid refleja mejor la certeza real.
 3. **Compatibilidad:** Se mantiene `predict_proba()` como fallback para modelos sin `decision_function` (e.g., XGBoost).
 
+### 5.1. Flujo de Decisión: Probabilidad Sigmoid vs Softmax
+![Diagrama Modelo NLP](img/diagrama_modelo.png)
+
 ---
 
 ## 6. Frontend: Dashboard de Monitoreo
@@ -102,3 +108,34 @@ Se implementó una pestaña **📈 Analytics** en el frontend Streamlit que cons
 - **Tabla de registros:** Log detallado de cada predicción con fecha, especialidad, confianza y fragmento de la transcripción.
 
 La versión del modelo (`v3.0-sigmoid-10classes`) se muestra como badge en la barra de navegación para trazabilidad.
+
+---
+
+## 7. Manuales de Usuario, Instalación y Despliegue
+
+### 7.1. Instalación Local y Uso del Tablero (Frontend)
+1. **Instalación:** Activar el entorno virtual instalado en `requirements.txt` y asegurar las dependencias del frontend: `pip install -r frontend/requirements.txt`.
+2. **Setup Variables:** Crear el archivo `.env` en `frontend/` definiendo `API_URL` (ruta al backend) y `DASHBOARD_TOKEN` (credencial designada).
+3. **Ejecución:** Levantar el tablero local con `streamlit run frontend/app.py`.
+4. **Modo de Uso:**
+   - **Pestaña Predicciones:** Pegar la transcripción clínica en el área de texto para obtener las tres especialidades predichas (Top 3) al instante.
+   - **Pestaña Analytics:** Ingresar el *Dashboard Token* asegurado para desbloquear telemetría (frecuencias, tiempos de inferencia) y auditar el comportamiento del modelo.
+
+### 7.2. Configuración de DVC (Data Version Control)
+1. **Inicialización:** En la raíz del repositorio local, ejecutar `dvc init`.
+2. **Setup de Remoto:** Configurar el bucket S3 como Storage remoto e indicarle la ruta: `dvc remote add -d s3_remote s3://mlops-medical-project-uniandes-2026/golden`.
+3. **Seguimiento (Tracking):** Agregar el dataset y los artefactos con `dvc add data/raw/mtsamples.csv` y `dvc add models/xgboost_model.joblib`. Esto genera archivos `.dvc` (rastreables en Git).
+4. **Push/Pull:** Subir los binarios a S3 con `dvc push`. Para recuperarlos en cualquier entorno (como el Pipeline CI/CD o local), se ejecuta `dvc pull`.
+
+### 7.3. Seguimiento de Experimentos con MLflow
+Para reproducir y monitorear el entrenamiento de las versiones del modelo:
+1. **Ejecución:** Correr el pipeline de entrenamiento localmente vía `python -m src.train`.
+2. **Dashboard de MLflow:** Levantar el servidor de tracking ejecutando `mlflow ui --backend-store-uri mlruns/`.
+3. **Métricas y Artefactos:** Acceder a `http://localhost:5000` para auditar la evolución del Accuracy por experimento y descargar directamente las distintas versiones de los modelos serializados (`.joblib`).
+
+### 7.4. Despliegue en AWS Fargate (Backend API)
+1. **Autenticación y Repositorio (ECR):** Iniciar sesión localmente vía `aws configure` y crear un repositorio en Amazon Elastic Container Registry (ECR).
+2. **Construcción y Push:** Compilar la imagen Docker del backend (`docker build -t medical-api .`), etiquetarla y mediante `docker push` subirla a la URI del repositorio ECR.
+3. **Definición de Tarea (ECS Task Definition):** Crear una *Task Definition* tipo Fargate. Especificar la URI de la imagen en ECR, asignar recursos (ej. 1 vCPU, 2GB RAM) y otorgarle un **TaskRole** de IAM con permisos de lectura/escritura hacia el Data Lake en S3.
+4. **Despliegue del Servicio:** Instanciar un Cluster ECS, y lanzar un Servicio enganchado a la *Task Definition*. Verificar que el *Security Group* del VPC tenga el puerto `8000` abierto al exterior.
+5. **Variables de Entorno:** Durante la configuración del contenedor en ECS, inyectar variables clave como `S3_BUCKET_NAME` y `MODEL_VERSION`.
