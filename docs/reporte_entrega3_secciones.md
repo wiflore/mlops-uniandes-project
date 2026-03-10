@@ -76,3 +76,79 @@ La arquitectura sigue el patrón **API Gateway** con almacenamiento desacoplado:
    - **Zona Golden (`/golden`):** Contiene los datos crudos (`mtsamples.csv`) versionados por el remoto de **DVC** y los modelos serializados (`.joblib`). Es de **solo lectura** para la API.
    - **Zona Analítica (`/analytics`):** Cada vez que la API hace una predicción, un *middleware* guarda silenciosamente el texto original y la predicción en formato JSON.
    - Cuando el Dashboard pide los datos, la API descarga y unifica estos JSONs de la *Zona Analítica* para enviarlos listos para graficar.
+
+---
+
+## 4. Corrección del Pipeline de Entrenamiento (`train.py`)
+
+### Problema Detectado
+
+Al analizar los logs de producción vía el endpoint `/dashboard-data`, se identificó que las predicciones del modelo desplegado presentaban confianzas anormalmente bajas (~24-33%) y solo clasificaban en **5 especialidades** en lugar de las 10 documentadas en el notebook de modelado (`02_modeling_v1.ipynb`).
+
+**Causa raíz:** El script `train.py` ejecutaba 3 experimentos secuencialmente, cada uno sobrescribiendo los mismos archivos `.joblib` en `models/`:
+
+```python
+# ANTES (problemático): cada llamada sobrescribe los mismos archivos
+train_models(min_samples=50,  ...)  # Exp 1: 10 clases ✅
+train_models(min_samples=100, ...)  # Exp 2: 5 clases  ← sobrescribe
+train_models(min_samples=50,  ..., lr_c=0.1)  # Exp 3  ← sobrescribe de nuevo
+```
+
+El **Experimento 2** (`min_samples=100`) filtraba a solo 5 especialidades con ≥100 muestras, y el **Experimento 3** cambiaba `C=0.1`, generando un modelo más conservador. Cualquiera de estos dos experimentos dejaba un modelo subóptimo como el de producción.
+
+### Solución Implementada
+
+Se refactorizó `train.py` para aislar los experimentos del modelo de producción:
+
+```python
+# DESPUÉS: cada experimento guarda en su propia subcarpeta
+train_models(min_samples=50,  ..., output_dir="models/experiments/exp1_baseline")
+train_models(min_samples=100, ..., output_dir="models/experiments/exp2_strict")
+train_models(min_samples=50,  ..., output_dir="models/experiments/exp3_alt_hp")
+
+# El modelo de producción SIEMPRE se guarda al final en models/ (raíz)
+train_production_model()  # min_samples=50, C=1.0 → 10 clases, Acc: 89.8%
+```
+
+**Resultado:** El modelo de producción ahora clasifica consistentemente en **10 especialidades** con un Accuracy del **89.8%** y F1 Macro de **0.82**.
+
+---
+
+## 5. Probabilidades Independientes (Sigmoid vs Softmax)
+
+### Problema con Softmax
+
+El enfoque original usaba `predict_proba()` de scikit-learn, que aplica **softmax** a las puntuaciones del modelo. Esto obliga a que las probabilidades de todas las clases sumen exactamente 1.0 (100%). Con 10 clases, esto distorsiona la interpretación:
+
+| Transcripción | Especialidad | Confianza Softmax |
+|---|---|---|
+| CT scan abdominal con masa renal | Radiology | 16.7% |
+| Fractura de tibia + cirugía | Surgery | 14.2% |
+
+Una confianza del 16.7% sugiere que el modelo "no está seguro", cuando en realidad sí identifica correctamente la especialidad: simplemente no puede asignar más a una clase sin quitarle a las demás.
+
+### Solución: Sigmoid sobre `decision_function`
+
+Se cambió el módulo de inferencia (`predict.py`) para usar la función **sigmoid** aplicada a las puntuaciones crudas (`decision_function`) de cada clase de forma **independiente**:
+
+```python
+from scipy.special import expit  # sigmoid
+
+raw_scores = model.decision_function(X)[0]        # puntuaciones crudas por clase
+independent_probs = expit(raw_scores)              # sigmoid independiente
+# → Radiology: 81.4%, Surgery: 65.4% (NO suman 100%)
+```
+
+Cada clase ahora responde a la pregunta: *"¿Qué tan probable es que esta transcripción pertenezca a esta especialidad?"* de forma independiente. Esto permite resultados como:
+
+| Transcripción | Top 3 (Sigmoid) |
+|---|---|
+| CT scan abdominal con masa renal | Radiology **81.4%**, Surgery 65.4%, Urology 62.0% |
+| Fractura de tibia + fijación interna | Radiology **73.3%**, Surgery 71.9%, Orthopedic 62.5% |
+| Dolor torácico + elevación ST | SOAP/Notes **66.2%**, Radiology 64.5%, Gen. Medicine 62.6% |
+
+### Justificación Técnica
+
+1. **Interpretabilidad clínica:** En contexto médico, una transcripción puede ser relevante para múltiples especialidades simultáneamente (e.g., una fractura requiere tanto Radiología como Cirugía). Las probabilidades independientes reflejan esta realidad.
+2. **Consistencia con el rendimiento real:** El modelo tiene un accuracy del 89.8% en test, pero softmax forzaba confianzas artificialmente bajas (~16%). Sigmoid refleja mejor la certeza real del modelo.
+3. **Compatibilidad con XGBoost:** Se mantiene `predict_proba()` como fallback para modelos sin `decision_function` (e.g., XGBoost), garantizando compatibilidad retroactiva.

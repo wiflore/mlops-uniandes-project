@@ -1,5 +1,9 @@
 """
 Script de entrenamiento. Ejecutar: python -m src.train
+
+Estructura de modelos:
+  models/                          ← Producción (usado por la API)
+  models/experiments/<nombre>/     ← Cada experimento MLflow
 """
 import os
 import joblib
@@ -23,6 +27,12 @@ MIN_SAMPLES = 50
 MAX_FEATURES = 10_000
 RANDOM_STATE = 42
 
+# ── Configuración del modelo de producción ──
+PROD_MIN_SAMPLES = 50   # 10 clases
+PROD_LR_C = 1.0
+PROD_XGB_DEPTH = 6
+
+
 def load_and_prepare_data(data_path: str = DATA_PATH, min_samples: int = 50):
     df = pd.read_csv(data_path)
     if 'Unnamed: 0' in df.columns:
@@ -36,26 +46,30 @@ def load_and_prepare_data(data_path: str = DATA_PATH, min_samples: int = 50):
     return df
 
 
-def train_models(min_samples=50, xgb_depth=6, lr_c=1.0):
-    os.makedirs(MODELS_DIR, exist_ok=True)
+def train_models(min_samples=50, xgb_depth=6, lr_c=1.0, output_dir=None):
+    """Entrena XGBoost y LogReg. Guarda artefactos en output_dir."""
+    if output_dir is None:
+        output_dir = MODELS_DIR
+    os.makedirs(output_dir, exist_ok=True)
+
     df = load_and_prepare_data(min_samples=min_samples)
     print(f"\n--- Experimento: min_samples={min_samples}, depth={xgb_depth}, C={lr_c} ---")
     print(f"Dataset: {len(df)} registros, {df['medical_specialty'].nunique()} clases")
+    print(f"Output: {output_dir}")
 
     le = LabelEncoder()
     y = le.fit_transform(df['medical_specialty'])
-    joblib.dump(le, os.path.join(MODELS_DIR, 'label_encoder.joblib'))
+    joblib.dump(le, os.path.join(output_dir, 'label_encoder.joblib'))
 
     preprocessor = TextPreprocessor(max_features=MAX_FEATURES, ngram_range=(1, 2))
     X = preprocessor.fit_transform(df['transcription'])
-    preprocessor.save(os.path.join(MODELS_DIR, 'tfidf_vectorizer.joblib'))
+    preprocessor.save(os.path.join(output_dir, 'tfidf_vectorizer.joblib'))
 
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=RANDOM_STATE, stratify=y
     )
 
     # Configuración de MLflow
-    # Si la variable MLFLOW_TRACKING_URI no existe, usará ./mlruns localmente.
     tracking_uri = os.getenv("MLFLOW_TRACKING_URI", "http://127.0.0.1:5000")
     mlflow.set_tracking_uri(tracking_uri)
     mlflow.set_experiment("Medical_Transcriptions_Classification")
@@ -89,7 +103,7 @@ def train_models(min_samples=50, xgb_depth=6, lr_c=1.0):
         mlflow.log_metrics({"accuracy": acc, "f1_macro": f1})
         mlflow.xgboost.log_model(xgb_model, "modelo_xgboost")
         
-        joblib.dump(xgb_model, os.path.join(MODELS_DIR, 'xgboost_model.joblib'))
+        joblib.dump(xgb_model, os.path.join(output_dir, 'xgboost_model.joblib'))
 
     # LogReg
     with mlflow.start_run(run_name=f"LogReg_MS{min_samples}_C{lr_c}"):
@@ -115,17 +129,44 @@ def train_models(min_samples=50, xgb_depth=6, lr_c=1.0):
         mlflow.log_metrics({"accuracy": acc, "f1_macro": f1})
         mlflow.sklearn.log_model(lr_model, "modelo_logreg")
 
-        joblib.dump(lr_model, os.path.join(MODELS_DIR, 'logreg_model.joblib'))
+        joblib.dump(lr_model, os.path.join(output_dir, 'logreg_model.joblib'))
 
-    print(f"\nModelos guardados en {MODELS_DIR}")
+    print(f"\nModelos guardados en {output_dir}")
+
+
+def train_production_model():
+    """
+    Entrena el modelo de producción con la configuración óptima.
+    Siempre guarda en models/ (raíz) — que es lo que la API usa.
+    """
+    print("\n" + "=" * 60)
+    print("ENTRENANDO MODELO DE PRODUCCIÓN")
+    print(f"  min_samples={PROD_MIN_SAMPLES} (10 clases)")
+    print(f"  LogReg C={PROD_LR_C}, XGBoost depth={PROD_XGB_DEPTH}")
+    print("=" * 60)
+    train_models(
+        min_samples=PROD_MIN_SAMPLES,
+        xgb_depth=PROD_XGB_DEPTH,
+        lr_c=PROD_LR_C,
+        output_dir=MODELS_DIR,  # raíz models/
+    )
+    print("\n✅ Modelo de producción guardado en models/")
 
 
 if __name__ == "__main__":
+    # ── Experimentos (cada uno guarda en su propia carpeta) ──
+    
     # Experimento 1: Baseline (50 muestras min, logreg C=1.0, xgb depth=6)
-    train_models(min_samples=50, xgb_depth=6, lr_c=1.0)
+    train_models(min_samples=50, xgb_depth=6, lr_c=1.0,
+                 output_dir=os.path.join(MODELS_DIR, "experiments", "exp1_baseline"))
     
     # Experimento 2: Sensibilidad de especialidades (filtro más estricto = menos clases)
-    train_models(min_samples=100, xgb_depth=6, lr_c=1.0)
+    train_models(min_samples=100, xgb_depth=6, lr_c=1.0,
+                 output_dir=os.path.join(MODELS_DIR, "experiments", "exp2_strict"))
     
     # Experimento 3: Alteración de hiperparámetros de los modelos
-    train_models(min_samples=50, xgb_depth=4, lr_c=0.1)
+    train_models(min_samples=50, xgb_depth=4, lr_c=0.1,
+                 output_dir=os.path.join(MODELS_DIR, "experiments", "exp3_alt_hp"))
+
+    # ── Modelo de producción (SIEMPRE al final, en models/) ──
+    train_production_model()
