@@ -11,9 +11,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
 RUN pip install --no-cache-dir streamlit requests pandas plotly wordcloud
 
-# Copiar los recursos del frontend
+# Copiar los recursos del frontend (app.py y assets/)
 COPY frontend/ ./frontend/
-COPY "Diseños Tablero/" "./Diseños Tablero/"
 
 EXPOSE 8501
 

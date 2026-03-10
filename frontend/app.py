@@ -14,10 +14,12 @@ st.set_page_config(
 
 # --- CARGAR ESTILOS CSS ---
 def load_css(file_name):
-    with open(file_name) as f:
+    # Asegurar que el path sea relativo a donde está app.py
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    file_path = os.path.join(current_dir, "assets", file_name)
+    with open(file_path) as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
-# Asumiendo que se corre desde la raíz del proyecto
 load_css("styles.css")
 
 # --- VARIABLES GLOBALES ---
