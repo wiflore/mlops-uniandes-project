@@ -3,6 +3,10 @@ import requests
 import os
 import json
 import textwrap
+import pandas as pd
+import plotly.express as px
+import plotly.graph_objects as go
+from datetime import datetime
 
 # --- CONFIGURACIÓN DE PÁGINA ---
 st.set_page_config(
@@ -21,10 +25,11 @@ def load_css(file_name):
 load_css("Diseños Tablero/styles.css")
 
 # --- VARIABLES GLOBALES ---
-API_URL = "http://localhost:8000"
+API_URL = os.environ.get("API_URL", "http://localhost:8000")
+MODEL_VERSION = os.environ.get("MODEL_VERSION", "v3.0-sigmoid-10classes")
 
 # --- INYECTAR NAVBAR ORIGINAL ---
-navbar_html = """
+navbar_html = f"""
     <nav class="navbar">
         <div class="logo">
             <div class="logo-icon">M</div>
@@ -33,13 +38,16 @@ navbar_html = """
                 <p>NLP • Specialty Classification • ML API</p>
             </div>
         </div>
-        <div class="api-status">API: Online</div>
+        <div style="display:flex;align-items:center;gap:12px;">
+            <span style="background:#1a1a2e;color:#a78bfa;padding:4px 12px;border-radius:20px;font-size:0.75rem;font-weight:600;">{MODEL_VERSION}</span>
+            <div class="api-status">API: Online</div>
+        </div>
     </nav>
 """
 st.markdown("".join([line.strip() for line in navbar_html.split("\n")]), unsafe_allow_html=True)
 
 # --- SISTEMA DE NAVEGACIÓN (TABS DE STREAMLIT) ---
-tab_home, tab_clasificar = st.tabs(["🏠 Home", "📊 Clasificar"])
+tab_home, tab_clasificar, tab_analytics = st.tabs(["🏠 Home", "📊 Clasificar", "📈 Analytics"])
 
 # ==========================================
 # PESTAÑA 1: HOME
@@ -209,5 +217,179 @@ with tab_clasificar:
             st.warning("⚠️ Por favor ingresa el texto de una transcripción médica.")
         else:
             st.info("Ingresa un texto en el panel izquierdo y haz clic en 'Clasificar' para inferir resultados dinámicos de la API.")
+
+    st.markdown('</div>', unsafe_allow_html=True)
+
+# ==========================================
+# PESTAÑA 3: ANALYTICS (datos reales de /dashboard-data)
+# ==========================================
+DASHBOARD_TOKEN = os.environ.get("DASHBOARD_TOKEN", "Team12Dashboard")
+
+with tab_analytics:
+    st.markdown('<div class="container" style="padding: 0;">', unsafe_allow_html=True)
+
+    analytics_header = """
+    <div class="card" style="margin-bottom: 1rem;">
+        <div class="card-header">
+            <h2>📈 Monitoreo de Producción</h2>
+        </div>
+        <p style="color: var(--text-muted); font-size: 0.9rem;">Datos históricos reales de predicciones del API en producción.</p>
+    </div>
+    """
+    st.markdown("".join([line.strip() for line in analytics_header.split("\n")]), unsafe_allow_html=True)
+
+    # Fetch dashboard data
+    @st.cache_data(ttl=30)
+    def fetch_dashboard_data():
+        try:
+            resp = requests.get(
+                f"{API_URL}/dashboard-data",
+                headers={"Authorization": f"Bearer {DASHBOARD_TOKEN}"},
+                timeout=10
+            )
+            if resp.status_code == 200:
+                return resp.json().get("data", [])
+            return []
+        except Exception:
+            return []
+
+    raw_data = fetch_dashboard_data()
+
+    if not raw_data:
+        st.warning("⚠️ No hay datos disponibles. Verifica que el API esté activa y el token sea correcto.")
+    else:
+        # Parse response bodies to extract predictions
+        records = []
+        for entry in raw_data:
+            try:
+                resp_body = json.loads(entry.get("response_body", "{}"))
+                req_body = json.loads(entry.get("request_body", "{}"))
+                records.append({
+                    "timestamp": entry.get("timestamp", ""),
+                    "specialty": resp_body.get("specialty", "Unknown"),
+                    "confidence": resp_body.get("confidence", 0),
+                    "response_time_ms": entry.get("response_time_ms", 0),
+                    "status_code": entry.get("status_code", 0),
+                    "transcription": req_body.get("transcription", "")[:100] + "...",
+                })
+            except (json.JSONDecodeError, TypeError):
+                continue
+
+        if not records:
+            st.warning("⚠️ No se pudieron parsear los datos de predicciones.")
+        else:
+            df = pd.DataFrame(records)
+            df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce")
+            df = df.sort_values("timestamp")
+
+            # --- KPIs ---
+            kpi_cols = st.columns(4)
+            with kpi_cols[0]:
+                st.metric("Total Predicciones", f"{len(df):,}")
+            with kpi_cols[1]:
+                st.metric("Confianza Promedio", f"{df['confidence'].mean():.0%}")
+            with kpi_cols[2]:
+                st.metric("Tiempo Resp. Promedio", f"{df['response_time_ms'].mean():.1f} ms")
+            with kpi_cols[3]:
+                st.metric("Especialidades Únicas", f"{df['specialty'].nunique()}")
+
+            st.markdown("---")
+
+            # --- Charts: 2 columns ---
+            chart_col1, chart_col2 = st.columns(2)
+
+            with chart_col1:
+                # Pie chart - Distribución de especialidades
+                specialty_counts = df["specialty"].value_counts().reset_index()
+                specialty_counts.columns = ["Especialidad", "Cantidad"]
+                fig_pie = px.pie(
+                    specialty_counts, names="Especialidad", values="Cantidad",
+                    title="Distribución de Especialidades Predichas",
+                    color_discrete_sequence=px.colors.qualitative.Set3,
+                    hole=0.4
+                )
+                fig_pie.update_layout(
+                    height=400,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(size=12),
+                    margin=dict(t=40, b=20, l=20, r=20)
+                )
+                st.plotly_chart(fig_pie, use_container_width=True)
+
+            with chart_col2:
+                # Histogram - Distribución de confianza
+                fig_conf = px.histogram(
+                    df, x="confidence", nbins=20,
+                    title="Distribución de Confianza del Modelo",
+                    labels={"confidence": "Confianza", "count": "Frecuencia"},
+                    color_discrete_sequence=["#7c3aed"]
+                )
+                fig_conf.update_layout(
+                    height=400,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(size=12),
+                    margin=dict(t=40, b=20, l=20, r=20),
+                    xaxis=dict(tickformat=".0%")
+                )
+                st.plotly_chart(fig_conf, use_container_width=True)
+
+            # --- Second row of charts ---
+            chart_col3, chart_col4 = st.columns(2)
+
+            with chart_col3:
+                # Bar chart - Confianza promedio por especialidad
+                avg_conf = df.groupby("specialty")["confidence"].mean().sort_values(ascending=True).reset_index()
+                avg_conf.columns = ["Especialidad", "Confianza Promedio"]
+                fig_bar = px.bar(
+                    avg_conf, x="Confianza Promedio", y="Especialidad",
+                    orientation="h",
+                    title="Confianza Promedio por Especialidad",
+                    color="Confianza Promedio",
+                    color_continuous_scale="Viridis"
+                )
+                fig_bar.update_layout(
+                    height=400,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(size=12),
+                    margin=dict(t=40, b=20, l=20, r=20),
+                    xaxis=dict(tickformat=".0%"),
+                    showlegend=False
+                )
+                st.plotly_chart(fig_bar, use_container_width=True)
+
+            with chart_col4:
+                # Scatter - Tiempo de respuesta
+                fig_time = px.scatter(
+                    df, x="timestamp", y="response_time_ms",
+                    color="specialty",
+                    title="Tiempo de Respuesta por Predicción",
+                    labels={"response_time_ms": "Tiempo (ms)", "timestamp": "Fecha/Hora"},
+                    color_discrete_sequence=px.colors.qualitative.Set2
+                )
+                fig_time.update_layout(
+                    height=400,
+                    paper_bgcolor="rgba(0,0,0,0)",
+                    plot_bgcolor="rgba(0,0,0,0)",
+                    font=dict(size=12),
+                    margin=dict(t=40, b=20, l=20, r=20)
+                )
+                st.plotly_chart(fig_time, use_container_width=True)
+
+            # --- Data table ---
+            st.markdown("---")
+            st.markdown("### 📋 Registro de Predicciones")
+            display_df = df[["timestamp", "specialty", "confidence", "response_time_ms", "transcription"]].copy()
+            display_df.columns = ["Fecha/Hora", "Especialidad", "Confianza", "Tiempo (ms)", "Transcripción"]
+            display_df["Confianza"] = display_df["Confianza"].apply(lambda x: f"{x:.0%}")
+            display_df["Tiempo (ms)"] = display_df["Tiempo (ms)"].apply(lambda x: f"{x:.1f}")
+            st.dataframe(display_df, use_container_width=True, height=300)
+
+            # Refresh button
+            if st.button("🔄 Actualizar Datos", use_container_width=True):
+                st.cache_data.clear()
+                st.rerun()
 
     st.markdown('</div>', unsafe_allow_html=True)
