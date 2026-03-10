@@ -34,12 +34,12 @@ ENV MODEL_VERSION=v3.0-sigmoid-10classes
 # Puerto de Streamlit
 EXPOSE 8501
 
-# Healthcheck
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health || exit 1
+# Healthcheck (usando el puerto dinámico)
+HEALTHCHECK CMD curl --fail http://localhost:${PORT:-8501}/_stcore/health || exit 1
 
-# Arrancar Streamlit en modo headless
-CMD ["streamlit", "run", "app.py", \
-     "--server.port=8501", \
-     "--server.address=0.0.0.0", \
-     "--server.headless=true", \
-     "--browser.gatherUsageStats=false"]
+# Arrancar Streamlit en modo headless (usando shell para poder leer $PORT de Railway)
+CMD streamlit run app.py \
+    --server.port=${PORT:-8501} \
+    --server.address=0.0.0.0 \
+    --server.headless=true \
+    --browser.gatherUsageStats=false
