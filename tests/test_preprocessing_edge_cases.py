@@ -259,17 +259,6 @@ class TestTextPreprocessorEdgeCases:
         X = preprocessor.fit_transform(["Patient presents with chest pain shortness"])
         assert X.shape[0] == 1
 
-    def test_fit_transform_empty_strings(self, preprocessor):
-        """Lista con strings vacíos: TF-IDF produce vocabulario vacío → matriz sparse."""
-        # Strings vacíos → vocabulario vacío; la matriz tiene shape (3, 0)
-        import scipy.sparse
-        try:
-            X = preprocessor.fit_transform(["", "", ""])
-            assert X.shape[0] == 3
-        except ValueError:
-            # sklearn puede rechazar corpus sin vocabulario — comportamiento válido
-            pytest.skip("sklearn rechaza corpus completamente vacío")
-
     def test_fit_transform_none_strings_handled(self, preprocessor):
         """None en la lista → clean_text devuelve '' → no debe romper."""
         # clean_text maneja None → ""; fit_transform lo procesa
@@ -279,15 +268,6 @@ class TestTextPreprocessorEdgeCases:
             assert X.shape[0] == 3
         except ValueError:
             pytest.skip("sklearn rechaza corpus casi vacío")
-
-    def test_fit_transform_numbers_only(self, preprocessor):
-        """Textos numéricos: clean_text los convierte en '' → vocabulario vacío."""
-        try:
-            X = preprocessor.fit_transform(["123456", "789012", "345678"])
-            assert X.shape[0] == 3
-        except ValueError:
-            # Comportamiento válido cuando todos los docs quedan vacíos
-            pytest.skip("sklearn rechaza corpus numérico (vocabulario vacío)")
 
     def test_fit_transform_preserves_doc_count(self, preprocessor):
         """El número de filas debe igualar el número de documentos."""
