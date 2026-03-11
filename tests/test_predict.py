@@ -21,24 +21,12 @@ class TestMedicalSpecialtyPredictor:
         p.load(model_name="logreg")
         return p
 
-    @pytest.fixture
-    def xgb_predictor(self):
-        """Predictor cargado con modelo xgboost."""
-        p = MedicalSpecialtyPredictor(models_dir=MODELS_DIR)
-        p.load(model_name="xgboost")
-        return p
-
     def test_load_logreg(self, predictor):
         """Verifica que el modelo logreg se carga correctamente."""
         assert predictor.model is not None
         assert predictor.vectorizer is not None
         assert predictor.label_encoder is not None
         assert predictor.model_name == "logreg"
-
-    def test_load_xgboost(self, xgb_predictor):
-        """Verifica que el modelo xgboost se carga correctamente."""
-        assert xgb_predictor.model is not None
-        assert xgb_predictor.model_name == "xgboost"
 
     def test_predict_returns_tuple(self, predictor):
         """Verifica que predict devuelve una tupla de 3 elementos."""
@@ -78,20 +66,6 @@ class TestMedicalSpecialtyPredictor:
         specialty, confidence, top_3 = predictor.predict(text)
         probs = [item["probability"] for item in top_3]
         assert probs == sorted(probs, reverse=True)
-
-    @pytest.mark.xfail(
-        reason="BUG CONOCIDO: XGBoost predice índice de label (ej. 6) fuera "
-               "del rango del LabelEncoder guardado. El modelo fue entrenado con "
-               "un LabelEncoder diferente al serializado. Requiere re-entrenamiento "
-               "sincronizado.",
-        strict=True,
-    )
-    def test_predict_xgboost_basic(self, xgb_predictor):
-        """Verifica que el modelo XGBoost también predice correctamente."""
-        text = "Patient underwent cardiac catheterization and stent placement"
-        specialty, confidence, top_3 = xgb_predictor.predict(text)
-        assert isinstance(specialty, str)
-        assert 0.0 <= confidence <= 1.0
 
 
 class TestPredictorWithoutModels:

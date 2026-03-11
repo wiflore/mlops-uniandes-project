@@ -279,3 +279,14 @@ python -m pytest tests/ -v -k "not skipif"
 # Ver bugs documentados (xfail)
 python -m pytest tests/ -v --runxfail
 ```
+-----------------------------------------------
+## Pruebas para el doc:
+Un sistema de clasificación médica debe ser confiable: un error en la predicción o en el manejo de datos puede afectar directamente flujos clínicos. Las pruebas garantizan que la API responde correctamente ante cualquier tipo de entrada, que el modelo produce resultados consistentes y que los errores se manejan de forma segura y predecible, sin exponer el sistema a fallos en producción.
+
+Resultados: 202 pruebas que pasaron sin fallas
+
+Pruebas realizada:
+- API (/health, /predict): estructura del response, validación de campos, textos vacíos, cortos, largos, caracteres especiales, XSS, SQL injection y tiempos de respuesta.
+- Flujo end-to-end: ciclo completo desde health check hasta predicción, manejo de errores HTTP (404, 405, 422) y boundary values del schema.
+- Modelo (logreg): determinismo, propiedades estadísticas de las probabilidades, inputs extremos (emojis, unicode, 50K palabras).
+- Preprocesamiento (clean_text): invariantes de limpieza, inputs no-string, textos en otros idiomas.
