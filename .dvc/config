@@ -3,3 +3,5 @@
     remote = s3-golden
 ['remote "s3-golden"']
     url = s3://mlops-medical-project-uniandes-2026/golden/data/
+['remote "s3-models"']
+    url = s3://mlops-medical-project-uniandes-2026/golden/models/

@@ -65,7 +65,7 @@ Se refactorizó `train.py` para aislar los experimentos del modelo de producció
 - Una función `train_production_model()` entrena y guarda el modelo final en la raíz `models/`, que es lo que la API usa.
 - **Configuración de producción:** `min_samples=50` (10 clases), `C=1.0`, `xgb_depth=6`.
 
-**Resultado:** El modelo de producción clasifica en **10 especialidades** con Accuracy **89.8%** y F1 Macro **0.82**.
+**Resultado:** El modelo de producción (**Logistic Regression** con `class_weight='balanced'`) clasifica en **10 especialidades** con Accuracy **88.3%** y F1-Macro **0.80**.
 
 ---
 
@@ -88,7 +88,7 @@ Se cambió `predict.py` para usar la función **sigmoid** aplicada a las puntuac
 ### Justificación Técnica
 
 1. **Interpretabilidad clínica:** Una transcripción médica puede ser relevante para múltiples especialidades simultáneamente. Las probabilidades independientes reflejan esta realidad.
-2. **Consistencia con el rendimiento real:** El modelo tiene un accuracy del 89.8%, pero softmax forzaba confianzas artificialmente bajas. Sigmoid refleja mejor la certeza real.
+2. **Consistencia con el rendimiento real:** El modelo LogReg tiene un accuracy del 88.3%, pero softmax forzaba confianzas artificialmente bajas. Sigmoid refleja mejor la certeza real.
 3. **Compatibilidad:** Se mantiene `predict_proba()` como fallback para modelos sin `decision_function` (e.g., XGBoost).
 
 ### 5.1. Flujo de Decisión: Probabilidad Sigmoid vs Softmax
@@ -123,9 +123,15 @@ La versión del modelo (`v3.0-sigmoid-10classes`) se muestra como badge en la ba
 
 ### 7.2. Configuración de DVC (Data Version Control)
 1. **Inicialización:** En la raíz del repositorio local, ejecutar `dvc init`.
-2. **Setup de Remoto:** Configurar el bucket S3 como Storage remoto e indicarle la ruta: `dvc remote add -d s3_remote s3://mlops-medical-project-uniandes-2026/golden`.
-3. **Seguimiento (Tracking):** Agregar el dataset y los artefactos con `dvc add data/raw/mtsamples.csv` y `dvc add models/xgboost_model.joblib`. Esto genera archivos `.dvc` (rastreables en Git).
-4. **Push/Pull:** Subir los binarios a S3 con `dvc push`. Para recuperarlos en cualquier entorno (como el Pipeline CI/CD o local), se ejecuta `dvc pull`.
+2. **Setup de Remotos:** Se configuran dos remotos para segregar datos y modelos:
+   - **Datos:** `dvc remote add -d s3-golden s3://mlops-medical-project-uniandes-2026/golden/data/`
+   - **Modelos:** `dvc remote add s3-models s3://mlops-medical-project-uniandes-2026/golden/models/`
+3. **Seguimiento (Tracking):**
+   - **Dataset:** `dvc add data/mtsamples.csv` (genera `data/mtsamples.csv.dvc`)
+   - **Modelos:** `dvc add models/logreg_model.joblib models/xgboost_model.joblib models/tfidf_vectorizer.joblib models/label_encoder.joblib`
+4. **Push/Pull:** Subir los binarios a S3 con `dvc push` (datos al remote default) y `dvc push -r s3-models` (modelos). Para recuperarlos, se ejecuta `dvc pull` y `dvc pull -r s3-models`.
+
+> **Nota:** Los comandos DVC se ejecutan desde la instancia EC2 (`i-0aa08709dd3922dfb`, IP: 98.88.250.142) donde DVC y las credenciales AWS están configurados.
 
 ### 7.3. Seguimiento de Experimentos con MLflow
 Para reproducir y monitorear el entrenamiento de las versiones del modelo:

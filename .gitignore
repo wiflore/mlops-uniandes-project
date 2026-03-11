@@ -35,6 +35,7 @@ Thumbs.db
 logs/
 # Local files (build scripts, context docs, etc.)
 ignore/
+docs/soporte/
 
 # Temporary files
 *.tmp
